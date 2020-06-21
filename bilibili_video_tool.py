@@ -25,7 +25,7 @@ def get_media_type(parts):
     entry_json_path = "entry.json"
     if len(parts) == 0:
         print(Fore.RED + "[Error]: No video parts!" + Style.RESET_ALL)
-        os._exit(0)
+        sys.exit(0)
     with open(os.path.join(parts[0], entry_json_path), 'r', encoding='utf-8') as f:
         text = json.loads(f.read())
     media_type = text["media_type"]
@@ -83,7 +83,7 @@ def media_type_2(parts): # mix video.m4s audio.m4s (*.mkv) | for 1080P+
 
     if len(parts) == 0:
         print("[Error]: No video parts!")
-        os._exit(0)
+        sys.exit(0)
 
     with open(os.path.join(parts[0], entry_json_path), 'r', encoding='utf-8') as f:
         text = json.loads(f.read())

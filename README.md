@@ -1,6 +1,6 @@
 # bilibili手机缓存视频处理工具
 
-> For **Python 3.5+**
+> For **Python 3.5+**, need **ffmpeg**
 
 从手机中复制出 `Android\data\tv.danmaku.bili\download\` 目录下数字编号目录（建议将该工具放入复制出目录的同级目录），并执行下面命令进行混流或合并：
 
