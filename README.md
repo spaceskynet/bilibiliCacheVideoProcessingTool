@@ -6,7 +6,7 @@
 
 Windows:
 ```bat
-py -3.x bilibili_video_tool.py -d [Numbered Dir]
+py -3 bilibili_video_tool.py -d [Numbered Dir]
 ```
 
 Linux / Mac:
@@ -14,8 +14,10 @@ Linux / Mac:
 python3 bilibili_video_tool.py -d [Numbered Dir]
 ```
 
+`[Numbered Dir]`为数字编号目录的路径（绝对、相对路径均可）
+
 **使用方法：**
-```
+```py
 usage: bilibili_video_tool.py [options]
 
 bilibili download video mixer / merger by SpaceSkyNet
