@@ -7,7 +7,7 @@ import argparse, colorama
 from colorama import Fore, Back, Style
 
 def replace_illegal_chars(text):
-    replace_chars = '\\/:*?"<>|'
+    replace_chars = r'\/:*?"<>|'
     for replace_char in replace_chars:
         text = text.replace(replace_char, ",")
     return text
