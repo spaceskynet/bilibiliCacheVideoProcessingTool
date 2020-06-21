@@ -12,101 +12,85 @@ def replace_illegal_chars(text):
         text = text.replace(replace_char, ",")
     return text
 
-def get_video_parts_dirs(workspace_dir):
-    video_parts_dirs = []
+def get_parts_dirs(workspace_dir):
+    parts_dirs = []
     for root, dirs, files in os.walk(workspace_dir, topdown=True):
         for dir in dirs:
             try: int(dir)
             except: pass
-            else: video_parts_dirs.append(os.path.join(workspace_dir, dir))
-        return video_parts_dirs
+            else: parts_dirs.append(os.path.join(workspace_dir, dir))
+        if len(parts_dirs) == 0:
+            print(Fore.RED + "[Error]: No video parts!" + Style.RESET_ALL)
+            sys.exit(0)
+        else:
+            entry_json_path = "entry.json"
+            with open(os.path.join(parts_dirs[0], entry_json_path), 'r', encoding='utf-8') as f:
+                text = json.loads(f.read())
+            export_path = os.path.join(workspace_dir, "..", replace_illegal_chars(text["title"]))
+            if not os.path.exists(export_path): os.mkdir(export_path)
+            return export_path, parts_dirs
 
-def get_media_type(parts):
+def get_media_type(parts_dir):
     entry_json_path = "entry.json"
-    if len(parts) == 0:
-        print(Fore.RED + "[Error]: No video parts!" + Style.RESET_ALL)
-        sys.exit(0)
-    with open(os.path.join(parts[0], entry_json_path), 'r', encoding='utf-8') as f:
+    print(parts_dir)
+    with open(os.path.join(parts_dir, entry_json_path), 'r', encoding='utf-8') as f:
         text = json.loads(f.read())
     media_type = text["media_type"]
     return media_type
 
-def media_type_1(parts): # merge *.flv (*.blv) | for others
+def media_type_1(export_path, parts_dir): # merge *.flv (*.blv) | for others
     entry_json_path = "entry.json"
+    entry_json_full_path = os.path.join(parts_dir, entry_json_path)
     cov_cmd = "ffmpeg -i {} -c copy -bsf:v h264_mp4toannexb -f mpegts {}"
     merge_cmd = 'ffmpeg -f concat -i {} -c copy -bsf:a aac_adtstoasc -movflags +faststart {}'
     
-    if len(parts) == 0:
-        print(Fore.RED + "[Error]: No video parts!" + Style.RESET_ALL)
-        sys.exit(0)
-    
-    with open(os.path.join(parts[0], entry_json_path), 'r', encoding='utf-8') as f:
+    with open(entry_json_full_path, 'r', encoding='utf-8') as f:
         text = json.loads(f.read())
-    all_path = replace_illegal_chars(text["title"])
+    file_name = replace_illegal_chars(text["page_data"]["part"])
+    type_tag = text["type_tag"]
     
-    if not os.path.exists(all_path):
-        os.mkdir(all_path)
-    for part in parts:
-        entry_json_full_path = os.path.join(part, entry_json_path)
-        
-        with open(entry_json_full_path, 'r', encoding='utf-8') as f:
-            text = json.loads(f.read())
-        file_name = text["page_data"]["part"]
-        type_tag = text["type_tag"]
-        
-        video_parts_dir = os.path.join(part, type_tag)
-        work_dir = os.path.abspath(os.getcwd())
-        index_json_path = "index.json"
-        video_merged_path = "video.flv"
-        video_merged_full_path = os.path.join(video_parts_dir, "video.flv")
-        video_merge_info = "mylist.txt"
-        
-        os.chdir(video_parts_dir)
-        with open(index_json_path, 'r', encoding='utf-8') as f:
-            text = json.loads(f.read())
-        video_parts = len(text["segment_list"])
-        
-        with open(video_merge_info, "w", encoding='utf-8') as f:
-            for j in range(0, video_parts):
-                f.write("file '{}.{}'\n".format(j, "blv"))
-        
-        os.system(merge_cmd.format(video_merge_info, video_merged_path))
-        os.chdir(work_dir)
-        
-        video_out_path = os.path.join(all_path, "%s.flv" % file_name)
-        shutil.move(video_merged_full_path, video_out_path)
-        print(Fore.GREEN + "[Process]: {} is finished!".format(file_name) + Style.RESET_ALL)
+    video_parts_dir = os.path.join(parts_dir, type_tag)
+    work_dir = os.path.abspath(os.getcwd())
+    index_json_path = "index.json"
+    video_merged_path = "video.flv"
+    video_merged_full_path = os.path.join(video_parts_dir, "video.flv")
+    video_merge_info = "mylist.txt"
+    
+    os.chdir(video_parts_dir)
+    with open(index_json_path, 'r', encoding='utf-8') as f:
+        text = json.loads(f.read())
+    video_parts = len(text["segment_list"])
+    
+    with open(video_merge_info, "w", encoding='utf-8') as f:
+        for j in range(0, video_parts):
+            f.write("file '{}.{}'\n".format(j, "blv"))
+    
+    os.system(merge_cmd.format(video_merge_info, video_merged_path))
+    os.chdir(work_dir)
+    
+    video_out_path = os.path.join(export_path, "%s.flv" % file_name)
+    shutil.move(video_merged_full_path, video_out_path)
+    print(Fore.GREEN + "[Process]: {} is finished!".format(file_name) + Style.RESET_ALL)
 
-def media_type_2(parts): # mix video.m4s audio.m4s (*.mkv) | for 1080P+
+def media_type_2(export_path, parts_dir): # mix video.m4s audio.m4s (*.mkv) | for 1080P+
     entry_json_path = "entry.json"
+    entry_json_full_path = os.path.join(parts_dir, entry_json_path)
     mix_cmd = 'ffmpeg -i {0} -i {1} -vcodec copy -acodec aac -map 0:v:0 -map 1:a:0 {2}'
 
-    if len(parts) == 0:
-        print("[Error]: No video parts!")
-        sys.exit(0)
-
-    with open(os.path.join(parts[0], entry_json_path), 'r', encoding='utf-8') as f:
+    with open(entry_json_full_path, 'r', encoding='utf-8') as f:
         text = json.loads(f.read())
-    all_path = replace_illegal_chars(text["title"])
+    file_name = replace_illegal_chars(text["page_data"]["part"])
+    type_tag = text["type_tag"]
     
-    if not os.path.exists(all_path):
-        os.mkdir(all_path)
-    for part in parts:
-        entry_json_full_path = os.path.join(part, entry_json_path)
-
-        with open(entry_json_full_path, 'r', encoding='utf-8') as f:
-            text = json.loads(f.read())
-        file_name = text["page_data"]["part"]
-        type_tag = text["type_tag"]
-        
-        video_full_path = os.path.join(part, type_tag, "video.m4s")
-        audio_full_path = os.path.join(part, type_tag, "audio.m4s")
-        video_mixed_full_path = os.path.join(part, type_tag, "video.mkv")
-        
-        os.system(mix_cmd.format(video_full_path, audio_full_path, video_mixed_full_path))
-        video_out_path = os.path.join(all_path, "%s.mkv" % file_name)
-        shutil.move(video_mixed_full_path, video_out_path)
-        print(Fore.GREEN + "[Process]: {} is finished!".format(file_name) + Style.RESET_ALL)
+    video_parts_dir = os.path.join(parts_dir, type_tag)
+    video_full_path = os.path.join(video_parts_dir, "video.m4s")
+    audio_full_path = os.path.join(video_parts_dir, "audio.m4s")
+    video_mixed_full_path = os.path.join(video_parts_dir, "video.mkv")
+    
+    os.system(mix_cmd.format(video_full_path, audio_full_path, video_mixed_full_path))
+    video_out_path = os.path.join(export_path, "%s.mkv" % file_name)
+    shutil.move(video_mixed_full_path, video_out_path)
+    print(Fore.GREEN + "[Process]: {} is finished!".format(file_name) + Style.RESET_ALL)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="bilibili download video mixer / merger by SpaceSkyNet", usage='%(prog)s [options]')
@@ -115,7 +99,8 @@ if __name__ == "__main__":
     colorama.init()
     
     if args.dir:
-        video_parts_dirs = get_video_parts_dirs(args.dir)
-        eval("media_type_{}(video_parts_dirs)".format(get_media_type(video_parts_dirs)))
+        export_path, parts_dirs = get_parts_dirs(args.dir)
+        for parts_dir in parts_dirs:
+            eval("media_type_{}(export_path, parts_dir)".format(get_media_type(parts_dir)))
     else:
         parser.print_help()
