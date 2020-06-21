@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 # For Python 3.5+ , By SpaceSkyNet
 
-import json, os, sys, shutil
+import json, os, sys, shutil, platform
 import argparse, colorama
 from colorama import Fore, Back, Style
 
@@ -92,6 +92,26 @@ def media_type_2(export_path, parts_dir): # mix video.m4s audio.m4s (*.mkv) | fo
     shutil.move(video_mixed_full_path, video_out_path)
     print(Fore.GREEN + "[Process]: {} is finished!".format(file_name) + Style.RESET_ALL)
 
+def check_ffmpeg():
+    env_paths = os.environ["PATH"].split(';' if platform.system()=='Windows' else ":")
+    ffmpeg_file = "ffmpeg{}".format(".exe" if platform.system()=='Windows' else "")
+    for env_path in env_paths:
+        if os.path.exists(os.path.join(env_path, ffmpeg_file)): return True
+    return False        
+
+def video_processing(workspace_dir):
+    if not check_ffmpeg(): 
+        print(Fore.YELLOW + "[Warning]: Can not find ffmpeg in path! \nContinue(y/n)? " + Style.RESET_ALL, end = "")
+        op = input()
+        if op.lower() in ['y', 'yes']: 
+            print(Fore.YELLOW + "[Warning]: Maybe cause some error..." + Style.RESET_ALL)
+        else: 
+            print(Fore.YELLOW + "[Warning]: Please make sure ffmpeg is in path!" + Style.RESET_ALL)
+            sys.exit(0)
+    export_path, parts_dirs = get_parts_dirs(workspace_dir)
+    for parts_dir in parts_dirs:
+        eval("media_type_{}(export_path, parts_dir)".format(get_media_type(parts_dir)))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="bilibili download video mixer / merger by SpaceSkyNet", usage='%(prog)s [options]')
     parser.add_argument("-d", "--dir", type=str, help="the workspace_dir")
@@ -99,8 +119,6 @@ if __name__ == "__main__":
     colorama.init()
     
     if args.dir:
-        export_path, parts_dirs = get_parts_dirs(args.dir)
-        for parts_dir in parts_dirs:
-            eval("media_type_{}(export_path, parts_dir)".format(get_media_type(parts_dir)))
+        video_processing(args.dir)
     else:
         parser.print_help()
