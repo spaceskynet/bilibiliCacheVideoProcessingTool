@@ -93,11 +93,11 @@ def media_type_2(export_path, parts_dir): # mix video.m4s audio.m4s (*.mkv) | fo
     print(Fore.GREEN + "[Process]: {} is finished!".format(file_name) + Style.RESET_ALL)
 
 def check_ffmpeg():
-    env_paths = os.environ["PATH"].split(';' if platform.system()=='Windows' else ":")
-    ffmpeg_file = "ffmpeg{}".format(".exe" if platform.system()=='Windows' else "")
+    env_paths = os.environ["PATH"].split(';' if platform.system() == 'Windows' else ":")
+    ffmpeg_file = "ffmpeg{}".format(".exe" if platform.system() == 'Windows' else "")
     for env_path in env_paths:
         if os.path.exists(os.path.join(env_path, ffmpeg_file)): return True
-    return False        
+    return False
 
 def video_processing(workspace_dir):
     if not check_ffmpeg(): 
