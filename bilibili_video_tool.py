@@ -76,6 +76,7 @@ def media_type_2(export_path, parts_dir): # mix video.m4s audio.m4s (*.mkv) | fo
     entry_json_path = "entry.json"
     entry_json_full_path = os.path.join(parts_dir, entry_json_path)
     mix_cmd = 'ffmpeg -i {0} -i {1} -vcodec copy -acodec aac -map 0:v:0 -map 1:a:0 {2}'
+    mix_cmd_no_audio = 'ffmpeg -i {0} -vcodec copy -map 0:v:0 {1}'
 
     with open(entry_json_full_path, 'r', encoding='utf-8') as f:
         text = json.loads(f.read())
@@ -87,7 +88,8 @@ def media_type_2(export_path, parts_dir): # mix video.m4s audio.m4s (*.mkv) | fo
     audio_full_path = os.path.join(video_parts_dir, "audio.m4s")
     video_mixed_full_path = os.path.join(video_parts_dir, "video.mkv")
     
-    os.system(mix_cmd.format(video_full_path, audio_full_path, video_mixed_full_path))
+    if os.path.exists(audio_full_path): os.system(mix_cmd.format(video_full_path, audio_full_path, video_mixed_full_path))
+    else: os.system(mix_cmd_no_audio.format(video_full_path, video_mixed_full_path))
     video_out_path = os.path.join(export_path, "%s.mkv" % file_name)
     shutil.move(video_mixed_full_path, video_out_path)
     print(Fore.GREEN + "[Process]: {} is finished!".format(file_name) + Style.RESET_ALL)
