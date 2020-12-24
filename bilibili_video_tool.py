@@ -110,7 +110,11 @@ def video_processing(workspace_dir):
         else: 
             print(Fore.YELLOW + "[Warning]: Please make sure ffmpeg is in path!" + Style.RESET_ALL)
             sys.exit(0)
-    export_path, parts_dirs = get_parts_dirs(workspace_dir)
+    if os.path.exists(workspace_dir):
+        export_path, parts_dirs = get_parts_dirs(workspace_dir)
+    else:
+        print(Fore.RED + "[Error]: No such dir!" + Style.RESET_ALL)
+        sys.exit(0)
     for parts_dir in parts_dirs:
         eval("media_type_{}(export_path, parts_dir)".format(get_media_type(parts_dir)))
 
