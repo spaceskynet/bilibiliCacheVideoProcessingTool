@@ -16,9 +16,9 @@ def get_parts_dirs(workspace_dir):
     parts_dirs = []
     for root, dirs, files in os.walk(workspace_dir, topdown=True):
         for dir in dirs:
-            try: int(dir)
-            except: pass
-            else: parts_dirs.append(os.path.join(workspace_dir, dir))
+            entry_json_path = os.path.join(workspace_dir, dir, 'entry.json')
+            if os.path.exists(entry_json_path):
+                parts_dirs.append(os.path.join(workspace_dir, dir))
         if len(parts_dirs) == 0:
             print(Fore.RED + "[Error]: No video parts!" + Style.RESET_ALL)
             sys.exit(0)
